@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto Mono" rel="stylesheet" />
+    <link rel="stylesheet" href="/inc-ecx-style.css" />
+    <title>INC - Twinky</title>
+  </head>
+  <body style="flex-direction: column; display: flex; align-items: center">
+    <h1>INC - Twinky</h1>
+
+    <div style="max-width: 80ch">
+      <div>
+        <h2>Introduction</h2>
+
+        <p>Some time in 2024 my mechanical keyboard, the EP84 with Gateron Yellows broke. The fault was the microcontroller on the PCB, which was defective.</p>
+
+        <p>As a result I ordered the Pi Pico W microcontroller and looked into using the Tiny-USB library for the Pi to write a custom controller.</p>
+
+        <p>
+          This microcontroller has many interesting features, like being able to act as any USB device (USB hub, mouse, storage, etc), being able to use bluetooth and WiFi, while also being able to
+          read or write electrical signals.
+        </p>
+      </div>
+
+      <div>
+        <h2>Keyboard Matrices</h2>
+
+        <p>
+          In order to read the actual inputs of the mechanical switches most keyboards use a matrix, which is scanned by the microcontroller periodically to detect the keys pressed by the user. This
+          is done to reduce the amount of connections needed from the switches to the microcontroller.
+        </p>
+
+        <p>
+          Scanning keys in a matrix introduces a problem called ghosting, which is adding diodes to the schematic. This website explains the details very well:
+          <a href="https://pcbheaven.com/wikipages/How_Key_Matrices_Works/">https://pcbheaven.com/wikipages/How_Key_Matrices_Works/</a>
+        </p>
+      </div>
+
+      <div>
+        <h2>Reverse Engineering</h2>
+
+        <p>A schematic was created in order to know how to wire up the controller to the EP84's PCB.</p>
+
+        <p>Note: The numbering and the key order of the last column is off, however the matrix is correct otherwise.</p>
+        <img src="twinky-schematic.png" alt="EP84 Keyboard Matrix Schematic" />
+        <p>
+          Red R0 = Top row <br />
+          Purple C0 = Left column <br />
+          Pencil = Component label on the PCB
+        </p>
+      </div>
+
+      <div>
+        <h2>Soldering</h2>
+
+        <p>Enameled copper wire was used to solder from the PCB onto the controller. Sandpaper was used to remove the isolation.</p>
+
+        <img src="twinky-soldered.png" alt="Twinky Soldered" />
+
+        <p>The boot select button, which is used to load the program onto the Pi, is located under the print screen switch.</p>
+
+        <p>The Pi was mounted by gluing four plastic pieces onto the base of the keyboard case. These were then drilled into, to screw the Pi into place.</p>
+      </div>
+
+      <div>
+        <h2>Tiny-USB Project</h2>
+
+        <ol>
+          <li style="margin-left: 2em">
+            The Visual Studio Code Pi Pico extension was installed. This extension allows to use a wizard to create a project based on one of many templates included. The usb composite template was
+            chosen.
+          </li>
+          <li style="margin-left: 2em">The resulting project uses CMake and includes unused code for other Human Interface Devices. The unnecessary code was removed.</li>
+          <li style="margin-left: 2em">
+            Serial support was added: <br />
+            - Copy CDC section and buffer config and usb_descriptors.c from <a href="https://forums.raspberrypi.com/viewtopic.php?t=334842">https://forums.raspberrypi.com/viewtopic.php?t=334842</a>.
+            (More information: <a href="https://forums.raspberrypi.com/viewtopic.php?t=355816">https://forums.raspberrypi.com/viewtopic.php?t=355816</a>) <br />
+            - Added stdio_init_all() call to start of main function. <br />
+            - Added pico_enable_stdio_usb(dev_hid_composite 1) to CMakeLists.txt <br />
+            - now printf() can be used.
+          </li>
+        </ol>
+      </div>
+
+      <div>
+        <h2>Capabilities of the Controller</h2>
+
+        <p>The resulting project contains the following features:</p>
+
+        <ul>
+          <li>
+            Keybinds experimented with
+            <ul>
+              <li>Fn + Escape: Deauthorizes keybinds.</li>
+              <li>Fn + PASSPHRASE: Authorises keybinds.</li>
+              <li>Fn + N: If you know, you know.</li>
+              <li>Ctrl + Win + Alt + Space: Ruberducky: Open geekbob.jpg.</li>
+              <li>Fn + I: Rubberducky: Enter twinky_exe install command.</li>
+              <li>Fn + C: Rubberducky: Cancel command.</li>
+            </ul>
+          </li>
+          <li>
+            Serial communication: The user can connect to the keyboard using a serial monitor and enter commands.
+            <ul>
+              <li>Help command</li>
+              <li>geekbob.jpg: A jpg can be transferred via serial.</li>
+              <li>twinky_exe: A exe can be transferred onto the host PC. This file is defined in a header, which is created by using the xdd command for Windows.</li>
+            </ul>
+          </li>
+          <li>A matrix scanner based on sleep_us and the GPIO functions provided by the SDK.</li>
+          <li>RubberDucky: Series of Keypresses can be defined and executed.</li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Capabilities of the Driver</h2>
+
+        The driver is a program that can be installed via serial onto the Host-PC.
+
+        <ul>
+          <!-- <li>The driver is able to show transparent text.</li> -->
+          <li>In progress...</li>
+        </ul>
+      </div>
+
+      <!-- spacer -->
+      <div style="height: 10em"></div>
+    </div>
+  </body>
+</html>
